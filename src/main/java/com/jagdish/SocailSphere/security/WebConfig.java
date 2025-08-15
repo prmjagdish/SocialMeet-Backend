@@ -14,7 +14,9 @@ public class WebConfig {
                 registry.addMapping("/**")
                         .allowedOrigins("https://socialsphereweb.vercel.app")
                         .allowedMethods("GET", "POST", "PUT", "DELETE")
-                        .allowedHeaders("*");
+                        .allowedHeaders("*")
+                .allowCredentials(true);
+
             }
         };
     }
