@@ -4,11 +4,14 @@ import com.jagdish.SocailSphere.model.entity.Post;
 import com.jagdish.SocailSphere.model.entity.User;
 import com.jagdish.SocailSphere.repository.PostRepository;
 import com.jagdish.SocailSphere.repository.UserRepository;
+import com.jagdish.SocailSphere.service.impl.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -18,31 +21,23 @@ public class PostController {
     private PostRepository postRepository;
 
     @Autowired
+    private PostService postService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @PostMapping("/{username}")
-    public ResponseEntity<PostDto> createPost(@PathVariable String username, @RequestBody PostDto dto) {
-        User user = userRepository.findByUsername(username).orElseThrow();
-
-        Post post = new Post();
-        post.setImageUrl(dto.getImageUrl());
-        post.setCaption(dto.getCaption());
-        post.setUser(user);
-        postRepository.save(post);
-
-        // Create response DTO
-        PostDto responseDto = new PostDto();
-        responseDto.setId(post.getId());
-        responseDto.setImageUrl(post.getImageUrl());
-        responseDto.setCaption(post.getCaption());
-        responseDto.setUser(user.getUsername());
-        responseDto.setAvatarUrl(user.getAvatarUrl()); // Assuming User has getAvatar()
-        responseDto.setLikes(0); // default
-        responseDto.setComments(new ArrayList<>()); // empty initially
-
-        return ResponseEntity.ok(responseDto);
+    public ResponseEntity<PostDto> createPost(@PathVariable String username, @RequestParam("media") MultipartFile media,  @RequestParam("caption") String caption) throws Exception {
+        return ResponseEntity.ok(postService.createPost(username, media, caption));
     }
 
+    @GetMapping("/feed")
+    public ResponseEntity<List<PostDto>> getHomeFeed(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        List<PostDto> feed = postService.getHomeFeed(page, size);
+        return ResponseEntity.ok(feed);
+    }
 
     @PutMapping("/{postId}")
     public ResponseEntity<PostDto> updatePost(@PathVariable Long postId, @RequestBody PostDto dto) {

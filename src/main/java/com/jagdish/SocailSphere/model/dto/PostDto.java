@@ -15,7 +15,7 @@ public class PostDto {
     private Long id;
     private String imageUrl;
     private String caption;
-    private String user; // This is username
+    private String username; // This is username
     private String avatarUrl;
     private Integer likes;
     private List<CommentDto> comments;

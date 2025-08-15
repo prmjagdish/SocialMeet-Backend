@@ -3,6 +3,7 @@ package com.jagdish.SocailSphere.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -36,4 +37,7 @@ public class Post {
     private List<Comment> comments = new ArrayList<>();
 
     private int likes;
+
+    private LocalDateTime createdAt;
+
 }
