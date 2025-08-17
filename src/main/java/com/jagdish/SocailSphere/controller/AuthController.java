@@ -1,10 +1,11 @@
 package com.jagdish.SocailSphere.controller;
+
 import com.jagdish.SocailSphere.model.dto.AuthRequest;
 import com.jagdish.SocailSphere.model.dto.AuthResponse;
 import com.jagdish.SocailSphere.model.dto.LoginRequest;
 import com.jagdish.SocailSphere.model.dto.OtpRequest;
 import com.jagdish.SocailSphere.service.impl.AuthServiceImpl;
-import com.jagdish.SocailSphere.service.OtpService;
+import com.jagdish.SocailSphere.service.impl.OtpServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class AuthController {
     private AuthServiceImpl authServiceimpl;
 
     @Autowired
-    private OtpService otpService;
+    private OtpServiceImpl otpService;
 
     @PostMapping("/send-otp")
     public ResponseEntity<String> sendOtp(@RequestBody OtpRequest request) {
@@ -42,20 +43,20 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-            try {
-                String token = authServiceimpl.login(request);
-                return ResponseEntity.ok(new AuthResponse("Login successful", token));
-            } catch (UsernameNotFoundException | BadCredentialsException ex) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new AuthResponse(ex.getMessage(), null));
-            }
+        try {
+            String token = authServiceimpl.login(request);
+            return ResponseEntity.ok(new AuthResponse("Login successful", token));
+        } catch (UsernameNotFoundException | BadCredentialsException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse(ex.getMessage(), null));
         }
+    }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> singUpUser(@RequestBody AuthRequest request){
+    public ResponseEntity<String> singUpUser(@RequestBody AuthRequest request) {
         String result = authServiceimpl.register(request);
 
-        if ( result.equals("User registered successfully.")){
+        if (result.equals("User registered successfully.")) {
             return ResponseEntity.ok(result);
         }
 

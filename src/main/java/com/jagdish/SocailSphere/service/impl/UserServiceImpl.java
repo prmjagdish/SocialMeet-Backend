@@ -1,4 +1,5 @@
 package com.jagdish.SocailSphere.service.impl;
+
 import com.jagdish.SocailSphere.model.dto.*;
 import com.jagdish.SocailSphere.model.entity.Post;
 import com.jagdish.SocailSphere.model.entity.Reel;
@@ -10,6 +11,7 @@ import com.jagdish.SocailSphere.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,19 +45,77 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return new UserProfileResponse(
-                mapToDto(user),
-                postRepository.findByUser(user).stream()
+        // Map posts by this user
+        List<PostDto> posts = postRepository.findByUser(user).stream()
+                .map(this::mapToPostDto)
+                .collect(Collectors.toList());
+
+        // Map reels by this user
+        List<ReelDto> reels = reelRepository.findByUser(user).stream()
+                .map(this::mapToReelDto)
+                .collect(Collectors.toList());
+
+        // Map saved posts (if your User entity has savedPosts relationship)
+        List<PostDto> savedPosts = user.getSavedPosts() != null ?
+                user.getSavedPosts().stream()
                         .map(this::mapToPostDto)
                         .collect(Collectors.toList())
-                ,
-                reelRepository.findByUser(user).stream().map(this::mapToReelDto).collect(Collectors.toList()),
-                user.getSavedPosts().stream().map(this::mapToPostDto).collect(Collectors.toList()),
-                user.getFollowers().stream().map(User::getUsername).collect(Collectors.toList()),
-                user.getFollowing().stream().map(User::getUsername).collect(Collectors.toList())
+                : List.of();
+
+        // Followers & Following usernames
+        List<String> followers = user.getFollowers() != null ?
+                user.getFollowers().stream()
+                        .map(User::getUsername)
+                        .collect(Collectors.toList())
+                : List.of();
+
+        List<String> following = user.getFollowing() != null ?
+                user.getFollowing().stream()
+                        .map(User::getUsername)
+                        .collect(Collectors.toList())
+                : List.of();
+
+        // Construct the full response
+        UserProfileResponse response = new UserProfileResponse();
+        response.setUser(mapToDto(user));
+        response.setPosts(posts);
+        response.setReels(reels);
+        response.setSavedPosts(savedPosts);
+        response.setFollowers(followers);
+        response.setFollowing(following);
+
+        return response;
+    }
+
+    // Map Post entity to PostDto
+    private PostDto mapToPostDto(Post post) {
+        return new PostDto(
+                post.getId(),
+                post.getImageUrl(),
+                post.getCaption(),
+                post.getUser().getUsername(),
+                post.getUser().getAvatarUrl(),
+                post.getLikedByUsers().size(),
+                post.getComments().stream()
+                        .map(comment -> new CommentDto(
+                                comment.getId(),
+                                comment.getContent(),
+                                comment.getUser().getUsername()
+                        ))
+                        .collect(Collectors.toList())
         );
     }
 
+    // Map Reel entity to ReelDto
+    private ReelDto mapToReelDto(Reel reel) {
+        return new ReelDto(
+                reel.getId(),
+                reel.getVideoUrl(),
+                reel.getCaption()
+        );
+    }
+
+    // Map User entity to UserDto
     private UserDto mapToDto(User user) {
         UserDto dto = new UserDto();
         dto.setName(user.getName());
@@ -63,26 +123,5 @@ public class UserServiceImpl implements UserService {
         dto.setBio(user.getBio());
         dto.setAvatar(user.getAvatarUrl());
         return dto;
-    }
-
-    private PostDto mapToPostDto(Post post) {
-        return new PostDto(
-                post.getId(),
-                post.getImageUrl(),
-                post.getCaption(),
-                post.getUser().getUsername(),           // ✅ username string
-                post.getUser().getAvatarUrl(),          // ✅ avatar string
-                post.getLikedByUsers().size(),          // ✅ int likes count
-                post.getComments().stream()
-                        .map(comment -> new CommentDto(
-                                comment.getId(),
-                                comment.getContent(),
-                                comment.getUser().getUsername()
-                        ))
-                        .collect(Collectors.toList()));
-    }
-
-    private ReelDto mapToReelDto(Reel reel) {
-        return new ReelDto(reel.getId(), reel.getCaption(), reel.getVideoUrl());
     }
 }

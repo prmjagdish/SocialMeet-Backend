@@ -1,6 +1,10 @@
 package com.jagdish.SocailSphere.model.entity;
+
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "reels")
@@ -10,7 +14,8 @@ import lombok.*;
 @AllArgsConstructor
 public class Reel {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String caption;
@@ -20,7 +25,6 @@ public class Reel {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Reel(String caption, String videoUrl, User user) {
-    }
+    
 }
 

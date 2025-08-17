@@ -1,4 +1,5 @@
 package com.jagdish.SocailSphere.repository;
+
 import com.jagdish.SocailSphere.model.entity.Reel;
 import com.jagdish.SocailSphere.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

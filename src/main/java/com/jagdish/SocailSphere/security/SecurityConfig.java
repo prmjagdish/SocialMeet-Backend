@@ -1,5 +1,7 @@
 package com.jagdish.SocailSphere.security;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +23,10 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+
+    @Value("${FRONTEND_URL}")
+    private String frontendUrl;
+
     @Autowired
     private JwtFilter jwtFilter;
 
@@ -28,7 +34,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
+                .cors(cors -> {
+                })
                 .authorizeHttpRequests()
                 .requestMatchers("/auth/**").permitAll()
                 .anyRequest().authenticated()
@@ -52,7 +59,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://socialsphereweb.vercel.app")); // React app
+        config.setAllowedOrigins(List.of(frontendUrl)); // React app
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true); // if you use cookies/sessions
@@ -61,7 +68,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
 
 
 }

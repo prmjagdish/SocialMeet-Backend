@@ -1,12 +1,13 @@
 package com.jagdish.SocailSphere.utilies;
+
 import com.jagdish.SocailSphere.model.entity.User;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
-import java.util.Date;
-import io.jsonwebtoken.Jwts;
 
 import javax.crypto.SecretKey;
+import java.util.Date;
 
 @Component
 public class JwtUtil {

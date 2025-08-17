@@ -1,7 +1,12 @@
 package com.jagdish.SocailSphere.model.entity;
+
 import jakarta.persistence.*;
-import lombok.*;
-import java.util.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -14,13 +19,12 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private  String email;
+    private String email;
     private String password;
     @Column(unique = true)
     private String username;
     private String bio;
     private String avatarUrl;
-    private Integer likes;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
