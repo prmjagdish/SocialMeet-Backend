@@ -1,5 +1,4 @@
 package com.jagdish.SocailSphere.service.impl;
-
 import com.jagdish.SocailSphere.model.dto.AuthRequest;
 import com.jagdish.SocailSphere.model.dto.LoginRequest;
 import com.jagdish.SocailSphere.model.entity.User;
@@ -11,7 +10,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.Optional;
 
 
@@ -50,10 +48,14 @@ public class AuthServiceImpl implements AuthService {
         User newUser = new User();
         newUser.setUsername(request.getUsername());
         newUser.setEmail(request.getEmail());
+        newUser.setName(request.getName());
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(newUser);
 
         return "User registered successfully.";
     }
 
+    public boolean isUsernameAvailable(String username) {
+        return !userRepository.existsByUsername(username);
+    }
 }

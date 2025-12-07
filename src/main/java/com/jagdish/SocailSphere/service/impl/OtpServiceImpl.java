@@ -28,11 +28,21 @@ public class OtpServiceImpl implements OtpService {
         String otp = generateOtp();
         otpStorage.put(toEmail, otp); // Save OTP for later verification
 
+        String subject = otp + " is your Social Meet code";
+
+        String text = "Hi,\n\n"
+                + "Someone tried to sign up for a Social Meet account\n"
+                + "with " + toEmail + ". If it was you, enter this\n"
+                + "confirmation code in the app:\n\n"
+                + otp + "\n\n"
+                + "This code will expire in 5 minutes.";
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
         message.setFrom("jaagddissh@gmail.com");
-        message.setSubject("Your OTP Code For ");
-        message.setText("Your OTP is: " + otp);
+        message.setSubject(subject);
+        message.setText(text);
+
         mailSender.send(message);
     }
 

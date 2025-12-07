@@ -1,5 +1,4 @@
 package com.jagdish.SocailSphere.controller;
-
 import com.jagdish.SocailSphere.model.dto.AuthRequest;
 import com.jagdish.SocailSphere.model.dto.AuthResponse;
 import com.jagdish.SocailSphere.model.dto.LoginRequest;
@@ -11,10 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -26,10 +25,32 @@ public class AuthController {
     @Autowired
     private OtpServiceImpl otpService;
 
+
+    @GetMapping("/check-username")
+    public ResponseEntity<Map<String, Boolean>> checkUsername(@RequestParam String username) {
+        boolean available = authServiceimpl.isUsernameAvailable(username);
+
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("available", available);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> singUpUser(@RequestBody AuthRequest request) {
+        String result = authServiceimpl.register(request);
+
+        if (result.equals("User registered successfully.")) {
+            return ResponseEntity.ok(result);
+        }
+
+        return ResponseEntity.badRequest().body(result);
+    }
+
     @PostMapping("/send-otp")
     public ResponseEntity<String> sendOtp(@RequestBody OtpRequest request) {
         otpService.sendOtp(request.getEmail());
-        return ResponseEntity.ok("OTP sent successfully to " + request.getEmail());
+        return ResponseEntity.ok("OTP sent successfully");
     }
 
     @PostMapping("/verify-otp")
@@ -50,17 +71,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new AuthResponse(ex.getMessage(), null));
         }
-    }
-
-    @PostMapping("/signup")
-    public ResponseEntity<String> singUpUser(@RequestBody AuthRequest request) {
-        String result = authServiceimpl.register(request);
-
-        if (result.equals("User registered successfully.")) {
-            return ResponseEntity.ok(result);
-        }
-
-        return ResponseEntity.badRequest().body(result);
     }
 
 }
