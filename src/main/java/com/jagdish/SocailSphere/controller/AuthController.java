@@ -37,29 +37,20 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> singUpUser(@RequestBody AuthRequest request) {
-        String result = authServiceimpl.register(request);
-
-        if (result.equals("User registered successfully.")) {
-            return ResponseEntity.ok(result);
-        }
-
-        return ResponseEntity.badRequest().body(result);
+    public ResponseEntity<String> register(@RequestBody AuthRequest request) {
+        otpService.saveSignupAndSendOtp(request);
+        return ResponseEntity.ok("OTP sent successfully!");
     }
 
-    @PostMapping("/send-otp")
-    public ResponseEntity<String> sendOtp(@RequestBody OtpRequest request) {
-        otpService.sendOtp(request.getEmail());
-        return ResponseEntity.ok("OTP sent successfully");
-    }
 
     @PostMapping("/verify-otp")
     public ResponseEntity<String> verifyOtp(@RequestBody OtpRequest request) {
-        if (otpService.verifyOtp(request.getEmail(), request.getOtp())) {
-            return ResponseEntity.ok("{\"verified\": true}");
-        } else {
+        boolean verified = otpService.verifyOtpAndRegister(request.getEmail(), request.getOtp());
+
+        if (!verified) {
             return ResponseEntity.status(400).body("{\"verified\": false}");
         }
+        return ResponseEntity.ok("{\"verified\": true}");
     }
 
     @PostMapping("/login")
