@@ -12,4 +12,5 @@ public interface UserService {
     UserProfileResponse getFullUserProfile(String username);
     List<UserSuggestionDTO> getSuggestedUsers(Long userId);
     void deleteCurrentUser();
+    UserProfileResponse getPublicUserProfile(String username);
 }

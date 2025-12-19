@@ -16,5 +16,5 @@ public class UserProfileResponse {
     private List<PostDto> savedPosts;
     private List<String> followers;
     private List<String> following;
-
+    private boolean owner;
 }

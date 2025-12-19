@@ -49,4 +49,12 @@ public class UserController {
                 Map.of("message", "Account permanently deleted")
         );
     }
+
+    @GetMapping("/users/{username}")
+    public UserProfileResponse getUserProfileByUsername(
+            @PathVariable String username
+    ) {
+        return userService.getPublicUserProfile(username);
+    }
+
 }

@@ -83,13 +83,13 @@ public class UserServiceImpl implements UserService {
 
         // Construct the full response
         UserProfileResponse response = new UserProfileResponse();
+        response.setOwner(true);
         response.setUser(mapToDto(user));
         response.setPosts(posts);
         response.setReels(reels);
         response.setSavedPosts(savedPosts);
         response.setFollowers(followers);
         response.setFollowing(following);
-
         return response;
     }
 
@@ -140,6 +140,7 @@ public class UserServiceImpl implements UserService {
                         u.getName(),
                         "@" + u.getUsername(),
                         u.getAvatarUrl()
+
                 ))
                 .toList();
     }
@@ -150,4 +151,39 @@ public class UserServiceImpl implements UserService {
         User user = authUtil.getCurrentUser();
         userRepository.delete(user);
     }
+
+    @Override
+    public UserProfileResponse getPublicUserProfile(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<PostDto> posts = postRepository.findByUser(user).stream()
+                .map(this::mapToPostDto)
+                .collect(Collectors.toList());
+
+        List<ReelDto> reels = reelRepository.findByUser(user).stream()
+                .map(this::mapToReelDto)
+                .collect(Collectors.toList());
+
+        List<String> followers = user.getFollowers().stream()
+                .map(User::getUsername)
+                .toList();
+
+        List<String> following = user.getFollowing().stream()
+                .map(User::getUsername)
+                .toList();
+
+        UserProfileResponse response = new UserProfileResponse();
+        response.setUser(mapToDto(user));
+        response.setPosts(posts);
+        response.setReels(reels);
+        response.setFollowers(followers);
+        response.setFollowing(following);
+
+        // ❌ Do NOT expose saved posts
+//        response.setSavedPosts(List.of());
+
+        return response;
+    }
+
 }
