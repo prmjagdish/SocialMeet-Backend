@@ -8,6 +8,9 @@ import com.jagdish.SocailSphere.repository.PostRepository;
 import com.jagdish.SocailSphere.repository.ReelRepository;
 import com.jagdish.SocailSphere.repository.UserRepository;
 import com.jagdish.SocailSphere.service.UserService;
+import com.jagdish.SocailSphere.utilies.AuthUtil;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     @Autowired
@@ -25,6 +29,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private ReelRepository reelRepository;
+
+    private final AuthUtil authUtil;
 
     @Override
     public UserDto updateProfile(String username, EditProfileRequest request) {
@@ -118,10 +124,30 @@ public class UserServiceImpl implements UserService {
     // Map User entity to UserDto
     private UserDto mapToDto(User user) {
         UserDto dto = new UserDto();
+        dto.setId(user.getId());
         dto.setName(user.getName());
         dto.setUsername(user.getUsername());
         dto.setBio(user.getBio());
         dto.setAvatar(user.getAvatarUrl());
         return dto;
+    }
+
+    public List<UserSuggestionDTO> getSuggestedUsers(Long userId) {
+        return userRepository.findSuggestedUsers(userId)
+                .stream()
+                .map(u -> new UserSuggestionDTO(
+                        u.getId(),
+                        u.getName(),
+                        "@" + u.getUsername(),
+                        u.getAvatarUrl()
+                ))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void deleteCurrentUser() {
+        User user = authUtil.getCurrentUser();
+        userRepository.delete(user);
     }
 }
