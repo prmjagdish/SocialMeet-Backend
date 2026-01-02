@@ -17,5 +17,5 @@ public class PostDto {
     private String avatarUrl;
     private Integer likes;
     private List<CommentDto> comments;
-
+    private boolean isFollowingByMe;
 }

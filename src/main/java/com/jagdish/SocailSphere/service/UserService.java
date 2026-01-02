@@ -13,4 +13,6 @@ public interface UserService {
     List<UserSuggestionDTO> getSuggestedUsers(Long userId);
     void deleteCurrentUser();
     UserProfileResponse getPublicUserProfile(String username);
+    void followUser(String username);
+    void unfollowUser(String username);
 }
