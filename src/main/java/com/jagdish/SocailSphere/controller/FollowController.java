@@ -19,6 +19,7 @@ public class FollowController {
         return ResponseEntity.ok("User followed successfully");
     }
 
+
     @PostMapping("/unfollow/{username}")
     public ResponseEntity<Void> unfollowUser(@PathVariable String username) {
         userService.unfollowUser(username);
