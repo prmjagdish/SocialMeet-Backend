@@ -32,6 +32,9 @@ public class UserServiceImpl implements UserService {
 
     private final AuthUtil authUtil;
 
+    @Autowired
+    private AuthServiceImpl authService;
+
     @Override
     public UserDto updateProfile(String username, EditProfileRequest request) {
         User user = userRepository.findByUsername(username)
@@ -69,17 +72,13 @@ public class UserServiceImpl implements UserService {
                 : List.of();
 
         // Followers & Following usernames
-        List<String> followers = user.getFollowers() != null ?
-                user.getFollowers().stream()
-                        .map(User::getUsername)
-                        .collect(Collectors.toList())
-                : List.of();
+        List<UserSummaryDto> followers = user.getFollowers().stream()
+                .map(u -> mapToUserSummary(u, user))
+                .toList();
 
-        List<String> following = user.getFollowing() != null ?
-                user.getFollowing().stream()
-                        .map(User::getUsername)
-                        .collect(Collectors.toList())
-                : List.of();
+        List<UserSummaryDto> following = user.getFollowing().stream()
+                .map(u -> mapToUserSummary(u,user))
+                .toList();
 
         // Construct the full response
         UserProfileResponse response = new UserProfileResponse();
@@ -93,14 +92,65 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
+    @Override
+    @Transactional
+    public void followUser(String username){
+        User currentUser = authUtil.getCurrentUser();
+
+        User targetUser = userRepository.findByUsername(username)
+                .orElseThrow(()-> new RuntimeException("User not found"));
+
+        if(currentUser.getId().equals(targetUser.getId())){
+            throw new RuntimeException("You cant not follow yourself");
+        }
+
+        if(!currentUser.getFollowing().contains(targetUser)){
+            currentUser.getFollowing().add(targetUser);
+            targetUser.getFollowers().add(currentUser);
+        }
+
+        userRepository.save(currentUser);
+        userRepository.save(targetUser);
+    }
+
+    @Override
+    @Transactional
+    public void unfollowUser(String username) {
+        User currentUser = authUtil.getCurrentUser();
+
+        User targetUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (currentUser.getId().equals(targetUser.getId())) {
+            throw new RuntimeException("You cannot unfollow yourself");
+        }
+
+        if (currentUser.getFollowing().contains(targetUser)) {
+            currentUser.getFollowing().remove(targetUser);
+            targetUser.getFollowers().remove(currentUser);
+        }
+
+        userRepository.save(currentUser);
+        userRepository.save(targetUser);
+    }
+
+
     // Map Post entity to PostDto
     private PostDto mapToPostDto(Post post) {
+
+        User currentUser = authUtil.getCurrentUser();
+        User postOwner = post.getUser();
+
+        boolean isFollowing = currentUser.getFollowing()
+                .stream()
+                .anyMatch(u -> u.getId().equals(postOwner.getId()));
+
         return new PostDto(
                 post.getId(),
                 post.getImageUrl(),
                 post.getCaption(),
-                post.getUser().getUsername(),
-                post.getUser().getAvatarUrl(),
+                postOwner.getUsername(),
+                postOwner.getAvatarUrl(),
                 post.getLikedByUsers().size(),
                 post.getComments().stream()
                         .map(comment -> new CommentDto(
@@ -108,9 +158,11 @@ public class UserServiceImpl implements UserService {
                                 comment.getContent(),
                                 comment.getUser().getUsername()
                         ))
-                        .collect(Collectors.toList())
+                        .collect(Collectors.toList()),
+                isFollowing // ✅ THIS FIXES REFRESH ISSUE
         );
     }
+
 
     // Map Reel entity to ReelDto
     private ReelDto mapToReelDto(Reel reel) {
@@ -131,6 +183,20 @@ public class UserServiceImpl implements UserService {
         dto.setAvatar(user.getAvatarUrl());
         return dto;
     }
+    private UserSummaryDto mapToUserSummary(User targetUser, User currentUser) {
+        boolean isFollowing = currentUser.getFollowing()
+                .stream()
+                .anyMatch(u -> u.getId().equals(targetUser.getId()));
+
+        return new UserSummaryDto(
+                targetUser.getId(),
+                targetUser.getUsername(),
+                targetUser.getName(),
+                targetUser.getAvatarUrl(),
+                isFollowing
+        );
+    }
+
 
     public List<UserSuggestionDTO> getSuggestedUsers(Long userId) {
         return userRepository.findSuggestedUsers(userId)
@@ -157,6 +223,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        User currentUser = authService.getCurrentUser();
+
         List<PostDto> posts = postRepository.findByUser(user).stream()
                 .map(this::mapToPostDto)
                 .collect(Collectors.toList());
@@ -165,13 +233,15 @@ public class UserServiceImpl implements UserService {
                 .map(this::mapToReelDto)
                 .collect(Collectors.toList());
 
-        List<String> followers = user.getFollowers().stream()
-                .map(User::getUsername)
+        List<UserSummaryDto> followers = user.getFollowers().stream()
+                .map(u -> mapToUserSummary(u, user))
                 .toList();
 
-        List<String> following = user.getFollowing().stream()
-                .map(User::getUsername)
+        List<UserSummaryDto> following = user.getFollowing().stream()
+                .map(u -> mapToUserSummary(u,user))
                 .toList();
+
+        boolean isFollowing = currentUser != null && user.getFollowers().contains(currentUser);
 
         UserProfileResponse response = new UserProfileResponse();
         response.setUser(mapToDto(user));
@@ -179,6 +249,7 @@ public class UserServiceImpl implements UserService {
         response.setReels(reels);
         response.setFollowers(followers);
         response.setFollowing(following);
+        response.setFollowingByMe(isFollowing);
 
         // ❌ Do NOT expose saved posts
 //        response.setSavedPosts(List.of());

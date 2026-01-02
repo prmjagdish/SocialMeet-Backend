@@ -11,6 +11,7 @@ import com.jagdish.SocailSphere.model.entity.User;
 import com.jagdish.SocailSphere.repository.PostRepository;
 import com.jagdish.SocailSphere.repository.UserRepository;
 import com.jagdish.SocailSphere.service.PostService;
+import com.jagdish.SocailSphere.utilies.AuthUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,8 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
 
     private final Cloudinary cloudinary;
+
+    private final AuthUtil authUtil;
 
     @Override
     public PostDto createPost(String username, MultipartFile media, String caption) throws IOException {
@@ -72,20 +75,25 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<PostDto> getHomeFeed(int page, int size) {
 
+        User currentUser = authUtil.getCurrentUser(); // ✅ logged-in user
+
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
 
         return posts.stream().map(post -> {
 
-//            System.out.println("Post Entity -> id: " + post.getId() +
-//                    ", createdAt: " + post.getCreatedAt());
+            User postOwner = post.getUser();
+
+            boolean isFollowing = currentUser.getFollowing()
+                    .stream()
+                    .anyMatch(u -> u.getId().equals(postOwner.getId()));
 
             PostDto dto = new PostDto();
             dto.setId(post.getId());
             dto.setImageUrl(post.getImageUrl());
             dto.setCaption(post.getCaption());
-            dto.setUsername(post.getUser().getUsername());
-            dto.setAvatarUrl(post.getUser().getAvatarUrl());
+            dto.setUsername(postOwner.getUsername());
+            dto.setAvatarUrl(postOwner.getAvatarUrl());
             dto.setLikes(post.getLikes());
 
             dto.setComments(
@@ -100,9 +108,12 @@ public class PostServiceImpl implements PostService {
                             .collect(Collectors.toList())
             );
 
+            dto.setFollowingByMe(isFollowing); // ✅ FIXED
+
             return dto;
         }).collect(Collectors.toList());
     }
+
 
     @Override
     public void deletePost(Long postId, String username) {

@@ -14,7 +14,10 @@ public class UserProfileResponse {
     private List<PostDto> posts;
     private List<ReelDto> reels;
     private List<PostDto> savedPosts;
-    private List<String> followers;
-    private List<String> following;
+//    private List<String> followers;
+//    private List<String> following;
+    private List<UserSummaryDto> followers;
+    private List<UserSummaryDto> following;
     private boolean owner;
+    private boolean isFollowingByMe;
 }
