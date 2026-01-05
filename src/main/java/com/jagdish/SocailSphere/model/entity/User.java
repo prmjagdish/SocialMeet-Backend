@@ -19,10 +19,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    @Column(unique = true, nullable = false)
     private String email;
+    @Column(nullable = true)
     private String password;
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String username;
+    @Column(nullable = false)
+    private String provider; // LOCAL / GOOGLE
     private String bio;
     private String avatarUrl;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -30,18 +34,24 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reel> reels = new ArrayList<>();
     @ManyToMany
-    @JoinTable(name = "user_followers",
+    @JoinTable(
+            name = "user_followers",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "follower_id"))
+            inverseJoinColumns = @JoinColumn(name = "follower_id")
+    )
     private List<User> followers = new ArrayList<>();
     @ManyToMany
-    @JoinTable(name = "user_following",
+    @JoinTable(
+            name = "user_following",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "following_id"))
+            inverseJoinColumns = @JoinColumn(name = "following_id")
+    )
     private List<User> following = new ArrayList<>();
     @ManyToMany
-    @JoinTable(name = "user_saved_posts",
+    @JoinTable(
+            name = "user_saved_posts",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "post_id"))
+            inverseJoinColumns = @JoinColumn(name = "post_id")
+    )
     private List<Post> savedPosts = new ArrayList<>();
 }

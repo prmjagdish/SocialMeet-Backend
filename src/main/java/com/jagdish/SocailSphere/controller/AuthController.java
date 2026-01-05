@@ -1,8 +1,5 @@
 package com.jagdish.SocailSphere.controller;
-import com.jagdish.SocailSphere.model.dto.AuthRequest;
-import com.jagdish.SocailSphere.model.dto.AuthResponse;
-import com.jagdish.SocailSphere.model.dto.LoginRequest;
-import com.jagdish.SocailSphere.model.dto.OtpRequest;
+import com.jagdish.SocailSphere.model.dto.*;
 import com.jagdish.SocailSphere.service.impl.AuthServiceImpl;
 import com.jagdish.SocailSphere.service.impl.OtpServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +58,18 @@ public class AuthController {
         } catch (UsernameNotFoundException | BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new AuthResponse(ex.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleLogin(
+            @RequestBody GoogleAuthRequest request) {
+        try {
+            String jwt = authServiceimpl.googleLogin(request.getToken());
+            return ResponseEntity.ok(new AuthResponse("Google login successful", jwt));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse("Google authentication failed", null));
         }
     }
 
