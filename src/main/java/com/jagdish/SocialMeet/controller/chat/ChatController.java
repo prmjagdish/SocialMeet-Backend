@@ -1,6 +1,7 @@
 package com.jagdish.SocialMeet.controller.chat;
 
 import com.jagdish.SocialMeet.model.dto.chat.ConversationDto;
+import com.jagdish.SocialMeet.model.dto.chat.MessageDto;
 import com.jagdish.SocialMeet.model.entity.Conversation;
 import com.jagdish.SocialMeet.model.entity.Message;
 import com.jagdish.SocialMeet.model.entity.User;
@@ -35,11 +36,10 @@ public class ChatController {
     }
 
     @GetMapping("/messages/{conversationId}")
-    public List<Message> messages(@PathVariable Long conversationId) {
+    public List<MessageDto> messages(@PathVariable Long conversationId) {
 
         User user = authUtil.getCurrentUser();
 
-        messageService.markAsSeen(conversationId, user.getId());
         return messageService.getMessages(conversationId);
     }
 }

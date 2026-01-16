@@ -10,15 +10,22 @@ import java.util.Optional;
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
 
     @Query("""
-      SELECT c FROM Conversation c
-      JOIN c.participants p1
-      JOIN c.participants p2
-      WHERE c.type = 'PRIVATE'
-      AND p1.id = :user1
-      AND p2.id = :user2
-    """)
+                SELECT c FROM Conversation c
+                JOIN c.participants p
+                WHERE c.type = 'PRIVATE'
+                AND p.id IN (:user1, :user2)
+                GROUP BY c
+                HAVING COUNT(p) = 2
+            """)
     Optional<Conversation> findPrivateChat(Long user1, Long user2);
 
-    List<Conversation> findAllByParticipants_Id(Long userId);
+    @Query("""
+                SELECT DISTINCT c
+                FROM Conversation c
+                JOIN c.participants p
+                JOIN FETCH c.participants
+                WHERE p.id = :userId
+            """)
+    List<Conversation> findAllByParticipantsWithUsers(Long userId);
 }
 

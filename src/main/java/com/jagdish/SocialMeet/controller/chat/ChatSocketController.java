@@ -1,8 +1,8 @@
 package com.jagdish.SocialMeet.controller.chat;
 
+import com.jagdish.SocialMeet.model.dto.chat.ChatSendDto;
 import com.jagdish.SocialMeet.model.dto.chat.ConversationDto;
 import com.jagdish.SocialMeet.model.dto.chat.MessageDto;
-import com.jagdish.SocialMeet.model.entity.Conversation;
 import com.jagdish.SocialMeet.model.entity.Message;
 import com.jagdish.SocialMeet.service.impl.chat.ConversationService;
 import com.jagdish.SocialMeet.service.impl.chat.MessageService;
@@ -11,7 +11,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -30,25 +29,28 @@ public class ChatSocketController {
      * }
      */
     @MessageMapping("/chat.send")
-    public void send(Map<String, Object> payload) {
+    public void send(ChatSendDto dto) {
 
-        Long senderId = Long.parseLong(payload.get("senderId").toString());
-        Long receiverId = Long.parseLong(payload.get("receiverId").toString());
-        String content = payload.get("content").toString();
+        System.out.println("📨 Message received in backend:");
+        System.out.println("Sender: " + dto.getSenderId());
+        System.out.println("Receiver: " + dto.getReceiverId());
+        System.out.println("Content: " + dto.getContent());
 
-        // 1️⃣ Get or create conversation
         ConversationDto conversation =
-                conversationService.getOrCreatePrivate(senderId, receiverId);
+                conversationService.getOrCreatePrivate(
+                        dto.getSenderId(),
+                        dto.getReceiverId()
+                );
 
-        // 2️⃣ Save message
         Message saved =
                 messageService.sendMessage(
                         conversation.getId(),
-                        senderId,
-                        content
+                        dto.getSenderId(),
+                        dto.getContent()
                 );
 
-        // 3️⃣ Convert ENTITY → DTO (CRITICAL STEP)
+        System.out.println("✅ Message saved with ID: " + saved.getId());
+
         MessageDto response = new MessageDto(
                 saved.getId(),
                 saved.getContent(),
@@ -57,11 +59,13 @@ public class ChatSocketController {
                 saved.getCreatedAt()
         );
 
-        // 4️⃣ Broadcast lightweight DTO
+        System.out.println("📢 Broadcasting to /topic/chat/" + conversation.getId());
+
         template.convertAndSend(
                 "/topic/chat/" + conversation.getId(),
                 response
         );
     }
+
 }
 
